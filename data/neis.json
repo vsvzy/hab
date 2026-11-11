@@ -1,0 +1,12 @@
+{
+  "school": {
+    "name": "합덕제철고등학교",
+    "officeCode": null,
+    "schoolCode": null
+  },
+  "generatedAt": null,
+  "weekStart": null,
+  "weekEnd": null,
+  "meals": [],
+  "timetable": []
+}

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f2">
+    <meta name="description" content="합덕제철고등학교 오늘의 급식과 이번 주 시간표를 확인하세요.">
+    <title>오늘의 학교생활 | 합덕제철고등학교</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="합덕제철고등학교 홈">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span class="brand-copy">
+          <strong>합덕제철고등학교</strong>
+          <span>오늘의 학교생활</span>
+        </span>
+      </a>
+      <span class="header-note">오늘도 좋은 하루 보내세요</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">HAPDEOK STEEL INDUSTRY HIGH SCHOOL</p>
+        <h1 id="page-title">오늘도 든든하게,<br><span>하루는 계획적으로.</span></h1>
+        <p class="intro-copy">오늘의 급식과 우리 반 이번 주 시간표를 한눈에 확인해요.</p>
+      </section>
+
+      <div id="status-message" class="status-message" role="status" hidden></div>
+
+      <div class="content-grid">
+        <section class="panel meal-panel" aria-labelledby="meal-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MEAL CALENDAR</p>
+              <h2 id="meal-title">오늘의 급식</h2>
+            </div>
+            <span class="section-icon meal-icon" aria-hidden="true">밥</span>
+          </div>
+          <div class="meal-date-row">
+            <button id="meal-prev" class="icon-button" type="button" aria-label="이전 날짜 급식 보기">←</button>
+            <p id="meal-date" class="meal-date">급식 날짜</p>
+            <button id="meal-next" class="icon-button" type="button" aria-label="다음 날짜 급식 보기">→</button>
+          </div>
+          <div id="meal-content" class="meal-content">
+            <p class="empty-state">급식 정보를 불러오는 중입니다.</p>
+          </div>
+          <div id="meal-days" class="day-picker" aria-label="이번 주 급식 날짜"></div>
+          <p class="data-caption">급식 정보 제공: 나이스 교육정보 개방 포털</p>
+        </section>
+
+        <section class="panel timetable-panel" aria-labelledby="timetable-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MY WEEK</p>
+              <h2 id="timetable-title">이번 주 시간표</h2>
+            </div>
+            <span class="section-icon timetable-icon" aria-hidden="true">주간</span>
+          </div>
+          <div class="class-controls">
+            <label>
+              <span class="sr-only">학년 선택</span>
+              <select id="grade-select" aria-label="학년 선택">
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+              </select>
+            </label>
+            <label>
+              <span class="sr-only">반 선택</span>
+              <select id="class-select" aria-label="반 선택">
+                <option value="1">1반</option>
+                <option value="2">2반</option>
+                <option value="3">3반</option>
+                <option value="4">4반</option>
+                <option value="5">5반</option>
+                <option value="6">6반</option>
+                <option value="7">7반</option>
+                <option value="8">8반</option>
+                <option value="9">9반</option>
+                <option value="10">10반</option>
+                <option value="11">11반</option>
+                <option value="12">12반</option>
+              </select>
+            </label>
+            <span id="week-label" class="week-label"></span>
+          </div>
+          <div class="table-wrap">
+            <table id="timetable">
+              <caption class="sr-only">선택한 학급의 이번 주 시간표</caption>
+              <thead>
+                <tr>
+                  <th scope="col">교시</th>
+                  <th scope="col">월</th>
+                  <th scope="col">화</th>
+                  <th scope="col">수</th>
+                  <th scope="col">목</th>
+                  <th scope="col">금</th>
+                </tr>
+              </thead>
+              <tbody id="timetable-body">
+                <tr><td class="table-message" colspan="6">시간표 정보를 불러오는 중입니다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p id="timetable-note" class="timetable-note">학년과 반 선택은 이 기기에 저장됩니다.</p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <span>합덕제철고등학교 학교생활 안내</span>
+      <span>데이터 출처: 나이스 교육정보 개방 포털</span>
+    </footer>
+  </body>
+</html>
