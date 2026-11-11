@@ -145,9 +145,9 @@ def build_payload(api_key):
 
     meals.sort(key=lambda row: (row["date"], row["mealType"]))
     timetable.sort(key=lambda row: (
-        row["grade"],
-        row["classNumber"],
-        row["date"],
+        str(row.get("grade") or ""),
+        str(row.get("classNumber") or ""),
+        str(row.get("date") or ""),
         int(row["period"]) if str(row["period"]).isdigit() else 0,
     ))
     return {
