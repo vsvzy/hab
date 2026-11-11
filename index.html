@@ -24,8 +24,18 @@
     <main>
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">HAPDEOK STEEL INDUSTRY HIGH SCHOOL</p>
-        <h1 id="page-title">오늘도 든든하게,<br><span>하루는 계획적으로.</span></h1>
-        <p class="intro-copy">오늘의 급식과 우리 반 이번 주 시간표를 한눈에 확인해요.</p>
+        <div class="intro-layout">
+          <div class="intro-copy-block">
+            <h1 id="page-title">오늘 학교생활,<br><span>한눈에 확인해요.</span></h1>
+            <p class="intro-copy">오늘의 급식부터 우리 반 주간 시간표까지<br class="desktop-break"> 필요한 정보를 편하게 확인해요.</p>
+          </div>
+          <aside class="today-card" aria-label="오늘 날짜">
+            <span class="today-label">TODAY IN HAPDEOK</span>
+            <strong id="today-date" class="today-date">날짜</strong>
+            <span id="today-weekday" class="today-weekday">요일</span>
+            <span class="today-decoration" aria-hidden="true">H</span>
+          </aside>
+        </div>
       </section>
 
       <div id="status-message" class="status-message" role="status" hidden></div>
@@ -87,6 +97,7 @@
             </label>
             <span id="week-label" class="week-label"></span>
           </div>
+          <p id="class-storage-note" class="class-storage-note" role="status" hidden></p>
           <div class="table-wrap">
             <table id="timetable">
               <caption class="sr-only">선택한 학급의 이번 주 시간표</caption>
