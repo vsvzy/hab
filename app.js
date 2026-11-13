@@ -1,9 +1,13 @@
 const DAYS_KO = ["월", "화", "수", "목", "금"];
 const SELECTED_CLASS_KEY = "hab:selectedClass";
-const GRADE_TWO_TIMETABLE_LABELS = [
-  { dayIndex: 1, firstPeriod: 5, lastPeriod: 6, label: "코스" },
-  { dayIndex: 2, firstPeriod: 1, lastPeriod: 6, label: "코스" },
-  { dayIndex: 3, firstPeriod: 1, lastPeriod: 4, label: "선택과목" },
+const TIMETABLE_DISPLAY_RULES = [
+  { grade: "2", dayIndex: 1, firstPeriod: 5, lastPeriod: 6, label: "코스" },
+  { grade: "2", dayIndex: 2, firstPeriod: 1, lastPeriod: 6, label: "코스" },
+  { grade: "2", dayIndex: 3, firstPeriod: 1, lastPeriod: 4, label: "선택과목" },
+  { grade: "3", dayIndex: 0, firstPeriod: 2, lastPeriod: 4, label: "코스" },
+  { grade: "3", dayIndex: 0, firstPeriod: 6, lastPeriod: 7, label: "코스" },
+  { grade: "3", dayIndex: 1, firstPeriod: 1, lastPeriod: 4, label: "선택과목" },
+  { grade: "3", dayIndex: 4, firstPeriod: 1, lastPeriod: 4, label: "선택과목B", excludedClassNumbers: ["5"] },
 ];
 
 const elements = {
@@ -188,12 +192,11 @@ function renderTimetable() {
     lessons.get(period)[dayIndex] = lesson;
   }
 
-  if (grade === "2") {
-    for (const rule of GRADE_TWO_TIMETABLE_LABELS) {
-      for (let period = rule.firstPeriod; period <= rule.lastPeriod; period += 1) {
-        if (!lessons.has(period)) lessons.set(period, Array(5).fill(null));
-        lessons.get(period)[rule.dayIndex] = { subject: rule.label, room: "" };
-      }
+  for (const rule of TIMETABLE_DISPLAY_RULES) {
+    if (rule.grade !== grade || rule.excludedClassNumbers?.includes(classNumber)) continue;
+    for (let period = rule.firstPeriod; period <= rule.lastPeriod; period += 1) {
+      if (!lessons.has(period)) lessons.set(period, Array(5).fill(null));
+      lessons.get(period)[rule.dayIndex] = { subject: rule.label, room: "" };
     }
   }
 
@@ -231,9 +234,12 @@ function renderTimetable() {
     }
     elements.timetableBody.append(row);
   }
-  elements.timetableNote.textContent = grade === "2"
-    ? "학년과 반 선택은 이 기기에 저장됩니다. 화요일 5~6교시와 수요일 1~6교시는 '코스', 목요일 1~4교시는 '선택과목'으로 표시합니다."
-    : "학년과 반 선택은 이 기기에 저장됩니다.";
+  const gradeNote = grade === "2"
+    ? "화요일 5~6교시와 수요일 1~6교시는 '코스', 목요일 1~4교시는 '선택과목'으로 표시합니다."
+    : grade === "3"
+      ? "월요일 2~4·6~7교시는 '코스', 화요일 1~4교시는 '선택과목'으로 표시합니다. 금요일 1~4교시는 5반을 제외하고 '선택과목B'로 표시합니다."
+      : "";
+  elements.timetableNote.textContent = ["학년과 반 선택은 이 기기에 저장됩니다.", gradeNote].filter(Boolean).join(" ");
 }
 
 function renderTodayTimetable(lessons) {
