@@ -124,12 +124,23 @@ h1, h2, p { margin-top: 0; }
   line-height: 1;
 }
 
+.dashboard-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 12px; }
+.dashboard-heading .eyebrow { margin: 0; }
+.dashboard-navigation { display: flex; gap: 7px; }
+.dashboard-navigation .icon-button { border: 1px solid #e8ebe4; background: #fff; }
 .content-grid {
-  display: grid;
-  grid-template-columns: minmax(280px, .82fr) minmax(0, 1.45fr);
-  gap: 20px;
+  display: flex;
+  gap: 18px;
   align-items: stretch;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 }
+.content-grid::-webkit-scrollbar { display: none; }
+.content-grid:focus-visible { outline: 3px solid #93bda5; outline-offset: 4px; }
+.content-grid > .panel { flex: 0 0 calc((100% - 36px) / 3); scroll-snap-align: start; }
 .panel {
   min-width: 0;
   padding: 27px;
@@ -153,6 +164,7 @@ h2 { margin-bottom: 0; font-size: 21px; letter-spacing: -.05em; }
 }
 .meal-icon { background: #f5eee2; color: #a4793d; }
 .timetable-icon { background: #eaf1e9; color: #557357; }
+.academic-icon { background: #edf0fa; color: #626b9a; }
 
 .meal-date-row {
   display: flex;
@@ -209,6 +221,7 @@ h2 { margin-bottom: 0; font-size: 21px; letter-spacing: -.05em; }
 .data-caption { margin: 14px 0 0; color: #a3aaa3; font-size: 10px; }
 
 .class-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 23px 0 16px; }
+.today-timetable-panel .class-controls { margin-top: 20px; }
 .class-storage-note { margin: -7px 0 12px; color: #966c35; font-size: 10px; line-height: 1.5; }
 .class-storage-note[hidden] { display: none; }
 .class-controls select {
@@ -222,6 +235,38 @@ h2 { margin-bottom: 0; font-size: 21px; letter-spacing: -.05em; }
   font-size: 12px;
 }
 .week-label { margin-left: auto; color: #929b93; font-size: 11px; }
+.today-schedule-list { display: grid; min-height: 205px; align-content: start; gap: 7px; }
+.today-lesson {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border: 1px solid #edf0ea;
+  border-radius: 10px;
+  background: #fbfcfa;
+}
+.today-period {
+  flex: 0 0 42px;
+  color: #879187;
+  font-size: 10px;
+  font-weight: 600;
+}
+.today-subject { overflow-wrap: anywhere; color: #36493b; font-size: 12px; font-weight: 600; }
+.academic-month { margin: 23px 0 12px; color: #7d877f; font-size: 11px; }
+.academic-events { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.academic-event {
+  display: grid;
+  grid-template-columns: 55px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f8f9fc;
+}
+.academic-event-date { color: #686f9d; font-size: 10px; font-weight: 700; }
+.academic-event-copy { min-width: 0; }
+.academic-event-name { display: block; color: #3e465f; font-size: 11px; font-weight: 700; line-height: 1.5; }
+.academic-event-detail { display: block; margin-top: 3px; color: #858b9f; font-size: 10px; line-height: 1.5; }
 .table-wrap { width: 100%; overflow-x: auto; }
 table { width: 100%; min-width: 460px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 th, td { padding: 10px 6px; border-bottom: 1px solid #edf0ea; text-align: center; }
@@ -235,6 +280,8 @@ tbody tr:last-child td { border-bottom: 0; }
 .room { display: block; margin-top: 3px; color: #a2aaa3; font-size: 9px; }
 .table-message { padding: 35px 12px; color: #89938a; font-size: 12px; line-height: 1.7; }
 .timetable-note { margin: 13px 0 0; color: #9aa39b; font-size: 10px; line-height: 1.6; }
+.weekly-panel { margin-top: 18px; }
+.weekly-controls { margin: 18px 0 12px; }
 .status-message {
   margin: 0 0 18px;
   padding: 13px 16px;
@@ -266,6 +313,11 @@ tbody tr:last-child td { border-bottom: 0; }
   border: 0;
 }
 
+@media (max-width: 900px) {
+  .content-grid { gap: 14px; }
+  .content-grid > .panel { flex-basis: calc((100% - 14px) / 2); }
+}
+
 @media (max-width: 760px) {
   .site-header, main, .site-footer { width: min(100% - 32px, 560px); }
   .site-header { height: 76px; }
@@ -273,7 +325,8 @@ tbody tr:last-child td { border-bottom: 0; }
   .intro { padding: 27px 23px; border-radius: 19px; }
   .today-card { flex-basis: 152px; min-height: 112px; padding: 15px; }
   .today-date { font-size: 21px; }
-  .content-grid { grid-template-columns: 1fr; gap: 14px; }
+  .content-grid { gap: 12px; }
+  .content-grid > .panel { flex-basis: 100%; }
   .panel { padding: 22px 19px; border-radius: 17px; }
   .meal-content { min-height: 150px; }
   .site-footer { flex-direction: column; gap: 7px; padding-block: 22px 30px; }

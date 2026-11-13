@@ -8,5 +8,6 @@
   "weekStart": null,
   "weekEnd": null,
   "meals": [],
-  "timetable": []
+  "timetable": [],
+  "academicSchedule": []
 }

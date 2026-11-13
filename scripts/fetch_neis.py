@@ -106,9 +106,14 @@ def build_payload(api_key):
     if not office_code or not school_code:
         raise RuntimeError("The NEIS school lookup did not include required school codes.")
 
-    monday, dates = weekday_dates(datetime.now(SEOUL).date())
+    today = datetime.now(SEOUL).date()
+    monday, dates = weekday_dates(today)
+    month_start = today.replace(day=1)
+    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    month_end = next_month - timedelta(days=1)
     meals = []
     timetable = []
+    academic_schedule = []
     for date in dates:
         date_code = date.strftime("%Y%m%d")
         school_params = {
@@ -143,6 +148,23 @@ def build_payload(api_key):
             })
         time.sleep(0.1)
 
+    academic_year = month_start.year if month_start.month >= 3 else month_start.year - 1
+    for row in fetch_rows(api_key, "SchoolSchedule", {
+        "ATPT_OFCDC_SC_CODE": office_code,
+        "SD_SCHUL_CODE": school_code,
+        "AY": str(academic_year),
+        "AA_FROM_YMD": month_start.strftime("%Y%m%d"),
+        "AA_TO_YMD": month_end.strftime("%Y%m%d"),
+    }):
+        event_date = row.get("AA_YMD", "")
+        event_name = row.get("EVENT_NM", "")
+        if event_date and event_name:
+            academic_schedule.append({
+                "date": datetime.strptime(event_date, "%Y%m%d").date().isoformat(),
+                "name": event_name,
+                "detail": row.get("EVENT_CNTNT", ""),
+            })
+
     meals.sort(key=lambda row: (row["date"], row["mealType"]))
     timetable.sort(key=lambda row: (
         str(row.get("grade") or ""),
@@ -150,6 +172,7 @@ def build_payload(api_key):
         str(row.get("date") or ""),
         int(row["period"]) if str(row["period"]).isdigit() else 0,
     ))
+    academic_schedule.sort(key=lambda row: row["date"])
     return {
         "school": {
             "name": SCHOOL_NAME,
@@ -161,6 +184,7 @@ def build_payload(api_key):
         "weekEnd": dates[-1].isoformat(),
         "meals": meals,
         "timetable": timetable,
+        "academicSchedule": academic_schedule,
     }
 
 
@@ -173,7 +197,8 @@ def main():
     OUTPUT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"NEIS data generated for {payload['weekStart']} to {payload['weekEnd']}: "
-        f"{len(payload['meals'])} meal entries and {len(payload['timetable'])} timetable entries."
+        f"{len(payload['meals'])} meal entries, {len(payload['timetable'])} timetable entries, "
+        f"and {len(payload['academicSchedule'])} academic schedule entries."
     )
 
 
