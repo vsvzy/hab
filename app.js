@@ -1,12 +1,10 @@
 const DAYS_KO = ["월", "화", "수", "목", "금"];
 const SELECTED_CLASS_KEY = "hab:selectedClass";
-const GRADE_TWO_WEDNESDAY_COURSE = {
-  grade: "2",
-  dayIndex: 2,
-  firstPeriod: 1,
-  lastPeriod: 6,
-  label: "코스",
-};
+const GRADE_TWO_TIMETABLE_LABELS = [
+  { dayIndex: 1, firstPeriod: 5, lastPeriod: 6, label: "코스" },
+  { dayIndex: 2, firstPeriod: 1, lastPeriod: 6, label: "코스" },
+  { dayIndex: 3, firstPeriod: 1, lastPeriod: 4, label: "선택과목" },
+];
 
 const elements = {
   status: document.querySelector("#status-message"),
@@ -168,17 +166,12 @@ function renderTimetable() {
     lessons.get(period)[dayIndex] = lesson;
   }
 
-  if (grade === GRADE_TWO_WEDNESDAY_COURSE.grade) {
-    for (
-      let period = GRADE_TWO_WEDNESDAY_COURSE.firstPeriod;
-      period <= GRADE_TWO_WEDNESDAY_COURSE.lastPeriod;
-      period += 1
-    ) {
-      if (!lessons.has(period)) lessons.set(period, Array(5).fill(null));
-      lessons.get(period)[GRADE_TWO_WEDNESDAY_COURSE.dayIndex] = {
-        subject: GRADE_TWO_WEDNESDAY_COURSE.label,
-        room: "",
-      };
+  if (grade === "2") {
+    for (const rule of GRADE_TWO_TIMETABLE_LABELS) {
+      for (let period = rule.firstPeriod; period <= rule.lastPeriod; period += 1) {
+        if (!lessons.has(period)) lessons.set(period, Array(5).fill(null));
+        lessons.get(period)[rule.dayIndex] = { subject: rule.label, room: "" };
+      }
     }
   }
 
@@ -215,8 +208,8 @@ function renderTimetable() {
     }
     elements.timetableBody.append(row);
   }
-  elements.timetableNote.textContent = grade === GRADE_TWO_WEDNESDAY_COURSE.grade
-    ? "학년과 반 선택은 이 기기에 저장됩니다. 수요일 1~6교시는 요청에 따라 실제 과목명 대신 '코스'로 표시합니다."
+  elements.timetableNote.textContent = grade === "2"
+    ? "학년과 반 선택은 이 기기에 저장됩니다. 화요일 5~6교시와 수요일 1~6교시는 '코스', 목요일 1~4교시는 '선택과목'으로 표시합니다."
     : "학년과 반 선택은 이 기기에 저장됩니다.";
 }
 
