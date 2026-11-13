@@ -26,7 +26,9 @@ const elements = {
   classNumber: document.querySelector("#class-select"),
   classStorageNote: document.querySelector("#class-storage-note"),
   todayTimetable: document.querySelector("#today-timetable"),
+  academicPrev: document.querySelector("#academic-prev"),
   academicMonth: document.querySelector("#academic-month"),
+  academicNext: document.querySelector("#academic-next"),
   academicEvents: document.querySelector("#academic-events"),
   weekLabel: document.querySelector("#week-label"),
   timetableBody: document.querySelector("#timetable-body"),
@@ -36,6 +38,7 @@ const elements = {
 let pageData = null;
 let weekDates = [];
 let selectedMealDate = "";
+let selectedAcademicMonth = "";
 
 function kstToday() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -280,23 +283,33 @@ function setScheduleMessage(container, message) {
 }
 
 function renderAcademicSchedule(today) {
-  elements.academicMonth.textContent = formatDate(today, { year: "numeric", month: "long" });
+  if (!selectedAcademicMonth) selectedAcademicMonth = today.slice(0, 7);
+  const monthDate = `${selectedAcademicMonth}-01`;
+  elements.academicMonth.textContent = formatDate(monthDate, { year: "numeric", month: "long" });
   elements.academicEvents.replaceChildren();
   const events = pageData.academicSchedule;
-  if (!Array.isArray(events)) {
+  const rangeStart = pageData.academicScheduleStart;
+  const rangeEnd = pageData.academicScheduleEnd;
+  if (!Array.isArray(events) || !rangeStart || !rangeEnd) {
+    elements.academicPrev.disabled = true;
+    elements.academicNext.disabled = true;
     setScheduleMessage(elements.academicEvents, "학사일정 자료를 확인할 수 없습니다.");
     return;
   }
 
-  const upcoming = events
-    .filter((event) => event.date >= today && event.name)
+  const firstMonth = rangeStart.slice(0, 7);
+  const lastMonth = rangeEnd.slice(0, 7);
+  elements.academicPrev.disabled = selectedAcademicMonth <= firstMonth;
+  elements.academicNext.disabled = selectedAcademicMonth >= lastMonth;
+  const monthlyEvents = events
+    .filter((event) => event.date.startsWith(`${selectedAcademicMonth}-`) && event.name)
     .sort((first, second) => first.date.localeCompare(second.date));
-  if (upcoming.length === 0) {
-    setScheduleMessage(elements.academicEvents, "이번 달 남은 학사일정이 없습니다.");
+  if (monthlyEvents.length === 0) {
+    setScheduleMessage(elements.academicEvents, "이달에 등록된 학사일정이 없습니다.");
     return;
   }
 
-  for (const event of upcoming) {
+  for (const event of monthlyEvents) {
     const item = document.createElement("li");
     item.className = "academic-event";
     const date = document.createElement("span");
@@ -317,6 +330,17 @@ function renderAcademicSchedule(today) {
     item.append(date, copy);
     elements.academicEvents.append(item);
   }
+}
+
+function moveAcademicMonth(offset) {
+  if (!selectedAcademicMonth || !pageData?.academicScheduleStart || !pageData?.academicScheduleEnd) return;
+  const [year, month] = selectedAcademicMonth.split("-").map(Number);
+  const nextMonth = new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 7);
+  const firstMonth = pageData.academicScheduleStart.slice(0, 7);
+  const lastMonth = pageData.academicScheduleEnd.slice(0, 7);
+  if (nextMonth < firstMonth || nextMonth > lastMonth) return;
+  selectedAcademicMonth = nextMonth;
+  renderAcademicSchedule(kstToday());
 }
 
 function restoreClassSelection() {
@@ -423,6 +447,8 @@ elements.mealNext.addEventListener("click", () => {
 });
 elements.grade.addEventListener("change", saveClassSelection);
 elements.classNumber.addEventListener("change", saveClassSelection);
+elements.academicPrev.addEventListener("click", () => moveAcademicMonth(-1));
+elements.academicNext.addEventListener("click", () => moveAcademicMonth(1));
 elements.dashboardPrev.addEventListener("click", () => moveDashboard(-1));
 elements.dashboardNext.addEventListener("click", () => moveDashboard(1));
 elements.dashboardCards.addEventListener("scroll", updateDashboardNavigation, { passive: true });

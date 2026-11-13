@@ -27,7 +27,7 @@
         <div class="intro-layout">
           <div class="intro-copy-block">
             <h1 id="page-title">오늘 학교생활,<br><span>한눈에 확인해요.</span></h1>
-            <p class="intro-copy">오늘의 급식과 우리 반 시간표,<br class="desktop-break"> 이번 달 학사일정을 한눈에 확인해요.</p>
+            <p class="intro-copy">오늘의 급식과 우리 반 시간표,<br class="desktop-break"> 월별 학사일정을 한눈에 확인해요.</p>
           </div>
           <aside class="today-card" aria-label="오늘 날짜">
             <span class="today-label">TODAY IN HAPDEOK</span>
@@ -107,11 +107,15 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">SCHOOL CALENDAR</p>
-              <h2 id="academic-title">이번 달 학사일정</h2>
+              <h2 id="academic-title">월별 학사일정</h2>
             </div>
             <span class="section-icon academic-icon" aria-hidden="true">일정</span>
           </div>
-          <p id="academic-month" class="academic-month"></p>
+          <div class="academic-month-row">
+            <button id="academic-prev" class="icon-button" type="button" aria-label="이전 달 학사일정 보기">←</button>
+            <p id="academic-month" class="academic-month" aria-live="polite"></p>
+            <button id="academic-next" class="icon-button" type="button" aria-label="다음 달 학사일정 보기">→</button>
+          </div>
           <ol id="academic-events" class="academic-events">
             <li class="empty-state">학사일정을 불러오는 중입니다.</li>
           </ol>
