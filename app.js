@@ -1,5 +1,12 @@
 const DAYS_KO = ["월", "화", "수", "목", "금"];
 const SELECTED_CLASS_KEY = "hab:selectedClass";
+const GRADE_TWO_WEDNESDAY_COURSE = {
+  grade: "2",
+  dayIndex: 2,
+  firstPeriod: 1,
+  lastPeriod: 6,
+  label: "코스",
+};
 
 const elements = {
   status: document.querySelector("#status-message"),
@@ -161,6 +168,20 @@ function renderTimetable() {
     lessons.get(period)[dayIndex] = lesson;
   }
 
+  if (grade === GRADE_TWO_WEDNESDAY_COURSE.grade) {
+    for (
+      let period = GRADE_TWO_WEDNESDAY_COURSE.firstPeriod;
+      period <= GRADE_TWO_WEDNESDAY_COURSE.lastPeriod;
+      period += 1
+    ) {
+      if (!lessons.has(period)) lessons.set(period, Array(5).fill(null));
+      lessons.get(period)[GRADE_TWO_WEDNESDAY_COURSE.dayIndex] = {
+        subject: GRADE_TWO_WEDNESDAY_COURSE.label,
+        room: "",
+      };
+    }
+  }
+
   elements.timetableBody.replaceChildren();
   if (lessons.size === 0) {
     setTableMessage("선택한 반의 이번 주 시간표가 NEIS에 등록되어 있지 않습니다. 학교에서 제공하는 수동 시간표 데이터가 필요할 수 있습니다.");
@@ -194,7 +215,9 @@ function renderTimetable() {
     }
     elements.timetableBody.append(row);
   }
-  elements.timetableNote.textContent = "학년과 반 선택은 이 기기에 저장됩니다.";
+  elements.timetableNote.textContent = grade === GRADE_TWO_WEDNESDAY_COURSE.grade
+    ? "학년과 반 선택은 이 기기에 저장됩니다. 수요일 1~6교시는 요청에 따라 실제 과목명 대신 '코스'로 표시합니다."
+    : "학년과 반 선택은 이 기기에 저장됩니다.";
 }
 
 function restoreClassSelection() {
