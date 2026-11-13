@@ -6,7 +6,7 @@
 
 1. 저장소의 **Settings → Secrets and variables → Actions**에서 `NEIS_API_KEY` 이름의 Actions secret을 설정합니다. 키를 HTML, JavaScript, JSON, 커밋 또는 공개 로그에 넣지 마세요.
 2. **Settings → Pages → Build and deployment**에서 **GitHub Actions**를 선택합니다.
-3. `main`에 변경 사항을 푸시하거나 Actions의 **Publish school portal** 워크플로를 수동 실행합니다. 워크플로는 평일 22:00 UTC(한국 시간 다음 날 07:00)에 데이터를 새로 받아 게시합니다.
+3. `main`에 변경 사항을 푸시하거나 Actions의 **Publish school portal** 워크플로를 수동 실행합니다. 워크플로는 매주 일요일 00:00 한국 시간(토요일 15:00 UTC)에 데이터를 새로 받아 게시합니다.
 
 Actions 실행이 성공하면 `data/neis.json`을 생성해 사이트와 함께 배포합니다. 이 파일의 저장소 내 기본 내용은 로컬 미리보기용 대기 상태이며, 실제 급식이나 시간표를 나타내지 않습니다.
 
