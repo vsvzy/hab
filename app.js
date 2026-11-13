@@ -8,6 +8,9 @@ const GRADE_TWO_TIMETABLE_LABELS = [
 
 const elements = {
   status: document.querySelector("#status-message"),
+  dashboardCards: document.querySelector("#dashboard-cards"),
+  dashboardPrev: document.querySelector("#dashboard-prev"),
+  dashboardNext: document.querySelector("#dashboard-next"),
   todayDate: document.querySelector("#today-date"),
   todayWeekday: document.querySelector("#today-weekday"),
   mealContent: document.querySelector("#meal-content"),
@@ -18,6 +21,9 @@ const elements = {
   grade: document.querySelector("#grade-select"),
   classNumber: document.querySelector("#class-select"),
   classStorageNote: document.querySelector("#class-storage-note"),
+  todayTimetable: document.querySelector("#today-timetable"),
+  academicMonth: document.querySelector("#academic-month"),
+  academicEvents: document.querySelector("#academic-events"),
   weekLabel: document.querySelector("#week-label"),
   timetableBody: document.querySelector("#timetable-body"),
   timetableNote: document.querySelector("#timetable-note"),
@@ -75,6 +81,22 @@ function setMealMessage(message) {
   paragraph.className = "empty-state";
   paragraph.textContent = message;
   elements.mealContent.append(paragraph);
+}
+
+function updateDashboardNavigation() {
+  const maxScroll = elements.dashboardCards.scrollWidth - elements.dashboardCards.clientWidth;
+  elements.dashboardPrev.disabled = elements.dashboardCards.scrollLeft <= 1;
+  elements.dashboardNext.disabled = maxScroll <= 1 || elements.dashboardCards.scrollLeft >= maxScroll - 1;
+}
+
+function moveDashboard(direction) {
+  const firstCard = elements.dashboardCards.querySelector(".panel");
+  if (!firstCard) return;
+  const gap = Number.parseFloat(getComputedStyle(elements.dashboardCards).columnGap) || 0;
+  elements.dashboardCards.scrollBy({
+    left: direction * (firstCard.getBoundingClientRect().width + gap),
+    behavior: "smooth",
+  });
 }
 
 function cleanMenu(menu) {
@@ -175,6 +197,7 @@ function renderTimetable() {
     }
   }
 
+  renderTodayTimetable(lessons);
   elements.timetableBody.replaceChildren();
   if (lessons.size === 0) {
     setTableMessage("선택한 반의 이번 주 시간표가 NEIS에 등록되어 있지 않습니다. 학교에서 제공하는 수동 시간표 데이터가 필요할 수 있습니다.");
@@ -211,6 +234,83 @@ function renderTimetable() {
   elements.timetableNote.textContent = grade === "2"
     ? "학년과 반 선택은 이 기기에 저장됩니다. 화요일 5~6교시와 수요일 1~6교시는 '코스', 목요일 1~4교시는 '선택과목'으로 표시합니다."
     : "학년과 반 선택은 이 기기에 저장됩니다.";
+}
+
+function renderTodayTimetable(lessons) {
+  elements.todayTimetable.replaceChildren();
+  const todayIndex = weekDates.indexOf(kstToday());
+  if (todayIndex < 0) {
+    setScheduleMessage(elements.todayTimetable, "오늘은 평일 시간표가 없는 날입니다.");
+    return;
+  }
+
+  const todayLessons = [...lessons.entries()]
+    .filter(([, days]) => days[todayIndex]?.subject)
+    .sort(([first], [second]) => first - second);
+  if (todayLessons.length === 0) {
+    setScheduleMessage(elements.todayTimetable, "선택한 반의 오늘 시간표가 NEIS에 등록되어 있지 않습니다.");
+    return;
+  }
+
+  for (const [period, days] of todayLessons) {
+    const item = document.createElement("div");
+    item.className = "today-lesson";
+    const periodLabel = document.createElement("span");
+    periodLabel.className = "today-period";
+    periodLabel.textContent = `${period}교시`;
+    const subject = document.createElement("span");
+    subject.className = "today-subject";
+    subject.textContent = days[todayIndex].subject;
+    item.append(periodLabel, subject);
+    elements.todayTimetable.append(item);
+  }
+}
+
+function setScheduleMessage(container, message) {
+  const messageElement = document.createElement(container.tagName === "OL" ? "li" : "p");
+  messageElement.className = "empty-state";
+  messageElement.textContent = message;
+  container.append(messageElement);
+}
+
+function renderAcademicSchedule(today) {
+  elements.academicMonth.textContent = formatDate(today, { year: "numeric", month: "long" });
+  elements.academicEvents.replaceChildren();
+  const events = pageData.academicSchedule;
+  if (!Array.isArray(events)) {
+    setScheduleMessage(elements.academicEvents, "학사일정 자료를 확인할 수 없습니다.");
+    return;
+  }
+
+  const upcoming = events
+    .filter((event) => event.date >= today && event.name)
+    .sort((first, second) => first.date.localeCompare(second.date));
+  if (upcoming.length === 0) {
+    setScheduleMessage(elements.academicEvents, "이번 달 남은 학사일정이 없습니다.");
+    return;
+  }
+
+  for (const event of upcoming) {
+    const item = document.createElement("li");
+    item.className = "academic-event";
+    const date = document.createElement("span");
+    date.className = "academic-event-date";
+    date.textContent = formatDate(event.date, { month: "numeric", day: "numeric", weekday: "short" });
+    const copy = document.createElement("span");
+    copy.className = "academic-event-copy";
+    const name = document.createElement("span");
+    name.className = "academic-event-name";
+    name.textContent = event.name;
+    copy.append(name);
+    if (event.detail) {
+      const detail = document.createElement("span");
+      detail.className = "academic-event-detail";
+      detail.textContent = event.detail;
+      copy.append(detail);
+    }
+    item.append(date, copy);
+    elements.academicEvents.append(item);
+  }
 }
 
 function restoreClassSelection() {
@@ -283,6 +383,7 @@ async function loadData() {
     return;
   }
 
+  renderAcademicSchedule(today);
   if (pageData.weekStart !== currentWeekStart(today)) {
     elements.status.hidden = false;
     elements.status.textContent = `게시된 자료는 ${formatDate(pageData.weekStart, { month: "long", day: "numeric" })} 주 기준입니다. 이번 주 자료가 업데이트될 때까지 급식과 시간표를 표시하지 않습니다.`;
@@ -316,4 +417,9 @@ elements.mealNext.addEventListener("click", () => {
 });
 elements.grade.addEventListener("change", saveClassSelection);
 elements.classNumber.addEventListener("change", saveClassSelection);
+elements.dashboardPrev.addEventListener("click", () => moveDashboard(-1));
+elements.dashboardNext.addEventListener("click", () => moveDashboard(1));
+elements.dashboardCards.addEventListener("scroll", updateDashboardNavigation, { passive: true });
+window.addEventListener("resize", updateDashboardNavigation);
+updateDashboardNavigation();
 loadData();

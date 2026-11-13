@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f5f7f2">
-    <meta name="description" content="합덕제철고등학교 오늘의 급식과 이번 주 시간표를 확인하세요.">
+    <meta name="description" content="합덕제철고등학교 오늘의 급식, 시간표와 학사일정을 확인하세요.">
     <title>오늘의 학교생활 | 합덕제철고등학교</title>
     <link rel="stylesheet" href="styles.css">
     <script src="app.js" defer></script>
@@ -27,7 +27,7 @@
         <div class="intro-layout">
           <div class="intro-copy-block">
             <h1 id="page-title">오늘 학교생활,<br><span>한눈에 확인해요.</span></h1>
-            <p class="intro-copy">오늘의 급식부터 우리 반 주간 시간표까지<br class="desktop-break"> 필요한 정보를 편하게 확인해요.</p>
+            <p class="intro-copy">오늘의 급식과 우리 반 시간표,<br class="desktop-break"> 이번 달 학사일정을 한눈에 확인해요.</p>
           </div>
           <aside class="today-card" aria-label="오늘 날짜">
             <span class="today-label">TODAY IN HAPDEOK</span>
@@ -40,7 +40,14 @@
 
       <div id="status-message" class="status-message" role="status" hidden></div>
 
-      <div class="content-grid">
+      <div class="dashboard-heading">
+        <p class="eyebrow">TODAY AT A GLANCE</p>
+        <div class="dashboard-navigation" aria-label="대시보드 카드 이동">
+          <button id="dashboard-prev" class="icon-button" type="button" aria-label="이전 카드 보기" disabled>←</button>
+          <button id="dashboard-next" class="icon-button" type="button" aria-label="다음 카드 보기">→</button>
+        </div>
+      </div>
+      <div id="dashboard-cards" class="content-grid" role="region" aria-label="오늘의 급식, 시간표, 학사일정 카드" tabindex="0">
         <section class="panel meal-panel" aria-labelledby="meal-title">
           <div class="section-heading">
             <div>
@@ -61,13 +68,13 @@
           <p class="data-caption">급식 정보 제공: 나이스 교육정보 개방 포털</p>
         </section>
 
-        <section class="panel timetable-panel" aria-labelledby="timetable-title">
+        <section class="panel today-timetable-panel" aria-labelledby="today-timetable-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">MY WEEK</p>
-              <h2 id="timetable-title">이번 주 시간표</h2>
+              <p class="eyebrow">MY TIMETABLE</p>
+              <h2 id="today-timetable-title">오늘의 시간표</h2>
             </div>
-            <span class="section-icon timetable-icon" aria-hidden="true">주간</span>
+            <span class="section-icon timetable-icon" aria-hidden="true">오늘</span>
           </div>
           <div class="class-controls">
             <label>
@@ -95,30 +102,60 @@
                 <option value="12">12반</option>
               </select>
             </label>
-            <span id="week-label" class="week-label"></span>
           </div>
           <p id="class-storage-note" class="class-storage-note" role="status" hidden></p>
-          <div class="table-wrap">
-            <table id="timetable">
-              <caption class="sr-only">선택한 학급의 이번 주 시간표</caption>
-              <thead>
-                <tr>
-                  <th scope="col">교시</th>
-                  <th scope="col">월</th>
-                  <th scope="col">화</th>
-                  <th scope="col">수</th>
-                  <th scope="col">목</th>
-                  <th scope="col">금</th>
-                </tr>
-              </thead>
-              <tbody id="timetable-body">
-                <tr><td class="table-message" colspan="6">시간표 정보를 불러오는 중입니다.</td></tr>
-              </tbody>
-            </table>
+          <div id="today-timetable" class="today-schedule-list">
+            <p class="empty-state">시간표 정보를 불러오는 중입니다.</p>
           </div>
           <p id="timetable-note" class="timetable-note">학년과 반 선택은 이 기기에 저장됩니다.</p>
         </section>
+
+        <section class="panel academic-panel" aria-labelledby="academic-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SCHOOL CALENDAR</p>
+              <h2 id="academic-title">이번 달 학사일정</h2>
+            </div>
+            <span class="section-icon academic-icon" aria-hidden="true">일정</span>
+          </div>
+          <p id="academic-month" class="academic-month"></p>
+          <ol id="academic-events" class="academic-events">
+            <li class="empty-state">학사일정을 불러오는 중입니다.</li>
+          </ol>
+          <p class="data-caption">학사일정 제공: 나이스 교육정보 개방 포털</p>
+        </section>
       </div>
+
+      <section class="panel weekly-panel" aria-labelledby="timetable-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">MY WEEK</p>
+            <h2 id="timetable-title">이번 주 시간표</h2>
+          </div>
+          <span class="section-icon timetable-icon" aria-hidden="true">주간</span>
+        </div>
+        <div class="class-controls weekly-controls">
+          <span id="week-label" class="week-label"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="timetable">
+            <caption class="sr-only">선택한 학급의 이번 주 시간표</caption>
+            <thead>
+              <tr>
+                <th scope="col">교시</th>
+                <th scope="col">월</th>
+                <th scope="col">화</th>
+                <th scope="col">수</th>
+                <th scope="col">목</th>
+                <th scope="col">금</th>
+              </tr>
+            </thead>
+            <tbody id="timetable-body">
+              <tr><td class="table-message" colspan="6">시간표 정보를 불러오는 중입니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
