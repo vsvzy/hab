@@ -108,9 +108,9 @@ def build_payload(api_key):
 
     today = datetime.now(SEOUL).date()
     monday, dates = weekday_dates(today)
-    month_start = today.replace(day=1)
-    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
-    month_end = next_month - timedelta(days=1)
+    academic_year = today.year if today.month >= 3 else today.year - 1
+    academic_schedule_start = datetime(academic_year, 3, 1).date()
+    academic_schedule_end = datetime(academic_year + 1, 3, 1).date() - timedelta(days=1)
     meals = []
     timetable = []
     academic_schedule = []
@@ -148,13 +148,12 @@ def build_payload(api_key):
             })
         time.sleep(0.1)
 
-    academic_year = month_start.year if month_start.month >= 3 else month_start.year - 1
     for row in fetch_rows(api_key, "SchoolSchedule", {
         "ATPT_OFCDC_SC_CODE": office_code,
         "SD_SCHUL_CODE": school_code,
         "AY": str(academic_year),
-        "AA_FROM_YMD": month_start.strftime("%Y%m%d"),
-        "AA_TO_YMD": month_end.strftime("%Y%m%d"),
+        "AA_FROM_YMD": academic_schedule_start.strftime("%Y%m%d"),
+        "AA_TO_YMD": academic_schedule_end.strftime("%Y%m%d"),
     }):
         event_date = row.get("AA_YMD", "")
         event_name = row.get("EVENT_NM", "")
@@ -185,6 +184,8 @@ def build_payload(api_key):
         "meals": meals,
         "timetable": timetable,
         "academicSchedule": academic_schedule,
+        "academicScheduleStart": academic_schedule_start.isoformat(),
+        "academicScheduleEnd": academic_schedule_end.isoformat(),
     }
 
 
