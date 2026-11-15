@@ -24,7 +24,6 @@ const elements = {
   grade: document.querySelector("#grade-select"),
   classNumber: document.querySelector("#class-select"),
   classStorageNote: document.querySelector("#class-storage-note"),
-  todayTimetable: document.querySelector("#today-timetable"),
   academicPrev: document.querySelector("#academic-prev"),
   academicMonth: document.querySelector("#academic-month"),
   academicNext: document.querySelector("#academic-next"),
@@ -117,12 +116,8 @@ function renderMeal(dateString) {
 function renderTodayMeal(dateString) {
   if (!elements.todayMealContent) return;
   elements.todayMealDate.textContent = formatDate(dateString);
-  const mealOrder = new Map([["조식", 0], ["중식", 1], ["석식", 2]]);
   const meals = (pageData?.meals || [])
-    .filter((meal) => meal.date === dateString)
-    .sort((first, second) =>
-      (mealOrder.get(first.mealType) ?? 3) - (mealOrder.get(second.mealType) ?? 3)
-    );
+    .filter((meal) => meal.date === dateString);
   renderMealEntries(elements.todayMealContent, meals, "오늘 등록된 급식 정보가 없습니다.");
 }
 
@@ -134,7 +129,11 @@ function renderMealEntries(container, meals, emptyMessage) {
     return;
   }
 
-  for (const meal of meals) {
+  const mealOrder = new Map([["조식", 0], ["중식", 1], ["석식", 2]]);
+  const orderedMeals = [...meals].sort((first, second) =>
+    (mealOrder.get(first.mealType) ?? 3) - (mealOrder.get(second.mealType) ?? 3)
+  );
+  for (const meal of orderedMeals) {
     const block = document.createElement("article");
     block.className = "meal-block";
     const type = document.createElement("span");
@@ -252,7 +251,6 @@ function renderTimetable() {
     }
   }
 
-  renderTodayTimetable(lessons);
   elements.timetableBody.replaceChildren();
   if (lessons.size === 0) {
     setTableMessage("선택한 반의 이번 주 시간표가 NEIS에 등록되어 있지 않습니다. 학교에서 제공하는 수동 시간표 데이터가 필요할 수 있습니다.");
@@ -292,43 +290,6 @@ function renderTimetable() {
       ? "월요일 2~4·6~7교시는 '코스', 화요일 1~4교시는 '선택과목'으로 표시합니다. 금요일 1~4교시는 5반을 제외하고 '선택과목B'로 표시합니다."
       : "";
   elements.timetableNote.textContent = ["학년과 반 선택은 이 기기에 저장됩니다.", gradeNote].filter(Boolean).join(" ");
-}
-
-function renderTodayTimetable(lessons) {
-  if (!elements.todayTimetable) return;
-  elements.todayTimetable.replaceChildren();
-  const todayIndex = weekDates.indexOf(kstToday());
-  if (todayIndex < 0) {
-    setTodayTimetableMessage("오늘은 평일 시간표가 없는 날입니다.");
-    return;
-  }
-
-  const todayLessons = [...lessons.entries()]
-    .filter(([, days]) => days[todayIndex]?.subject)
-    .sort(([first], [second]) => first - second);
-  if (todayLessons.length === 0) {
-    setTodayTimetableMessage("선택한 반의 오늘 시간표가 NEIS에 등록되어 있지 않습니다.");
-    return;
-  }
-
-  for (const [period, days] of todayLessons) {
-    const item = document.createElement("div");
-    item.className = "today-lesson";
-    const periodLabel = document.createElement("span");
-    periodLabel.className = "today-period";
-    periodLabel.textContent = `${period}교시`;
-    const subject = document.createElement("span");
-    subject.className = "today-subject";
-    subject.textContent = days[todayIndex].subject;
-    item.append(periodLabel, subject);
-    elements.todayTimetable.append(item);
-  }
-}
-
-function setTodayTimetableMessage(message) {
-  if (!elements.todayTimetable) return;
-  elements.todayTimetable.replaceChildren();
-  setScheduleMessage(elements.todayTimetable, message);
 }
 
 function setScheduleMessage(container, message) {
@@ -447,7 +408,6 @@ async function loadData() {
     setMealMessage(elements.todayMealContent, "급식 데이터를 불러올 수 없습니다.");
     setMealMessage(elements.mealContent, "급식 데이터를 불러올 수 없습니다.");
     setTableMessage("시간표 데이터를 불러올 수 없습니다.");
-    setTodayTimetableMessage("시간표 데이터를 불러올 수 없습니다.");
     return;
   }
 
@@ -475,7 +435,6 @@ async function loadData() {
     setMealMessage(elements.todayMealContent, "아직 게시된 오늘의 급식 정보가 없습니다.");
     setMealMessage(elements.mealContent, "아직 게시된 월별 급식 정보가 없습니다.");
     setTableMessage("아직 게시된 시간표 정보가 없습니다.");
-    setTodayTimetableMessage("아직 게시된 시간표 정보가 없습니다.");
     if (elements.mealMonth) renderMealMonth(today);
     if (elements.academicMonth) renderAcademicSchedule(today);
     return;
@@ -494,7 +453,6 @@ async function loadData() {
       : "이번 주 시간표 자료가 아직 게시되지 않았습니다.";
     elements.status.textContent = weekNotice;
     setTableMessage("이번 주 시간표 자료가 아직 업데이트되지 않았습니다.");
-    setTodayTimetableMessage("이번 주 시간표 자료가 아직 업데이트되지 않았습니다.");
     return;
   }
 

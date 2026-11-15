@@ -1,6 +1,6 @@
 # 합덕제철고등학교 학교생활 페이지
 
-오늘의 급식과 월별 급식표, 선택한 학급의 오늘·주간 시간표, 월별 학사일정을 보여 주는 정적 GitHub Pages 사이트입니다. 급식표, 시간표, 학사일정은 각각 별도 페이지에서 확인할 수 있습니다. 자료는 NEIS 오픈 API의 `mealServiceDietInfo`, `hisTimetable`, `SchoolSchedule` 서비스를 GitHub Actions에서 가져옵니다. API 키는 브라우저에 전달되지 않습니다.
+오늘의 급식과 월별 급식표, 선택한 학급의 주간 시간표, 월별 학사일정을 보여 주는 정적 GitHub Pages 사이트입니다. 급식표, 시간표, 학사일정은 각각 별도 페이지에서 확인할 수 있습니다. 자료는 NEIS 오픈 API의 `mealServiceDietInfo`, `hisTimetable`, `SchoolSchedule` 서비스를 GitHub Actions에서 가져옵니다. API 키는 브라우저에 전달되지 않습니다.
 
 ## GitHub Pages 설정
 
