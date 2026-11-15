@@ -96,6 +96,8 @@ def get_school(api_key):
 
 def weekday_dates(today):
     monday = today - timedelta(days=today.weekday())
+    if today.weekday() == 6:
+        monday += timedelta(days=7)
     return monday, [monday + timedelta(days=offset) for offset in range(5)]
 
 

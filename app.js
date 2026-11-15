@@ -68,7 +68,8 @@ function addDays(dateString, amount) {
 function currentWeekStart(dateString) {
   const [year, month, day] = dateString.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day, 12));
-  return addDays(dateString, -((date.getUTCDay() + 6) % 7));
+  const dayOfWeek = date.getUTCDay();
+  return addDays(dateString, dayOfWeek === 0 ? 1 : 1 - dayOfWeek);
 }
 
 function setTableMessage(message) {
@@ -426,7 +427,7 @@ async function loadData() {
   weekDates = Array.from({ length: 5 }, (_, index) => addDays(pageData.weekStart, index));
   elements.weekLabel.textContent = `${formatDate(weekDates[0], { month: "numeric", day: "numeric" })} – ${formatDate(weekDates[4], { month: "numeric", day: "numeric" })}`;
 
-  const initialDate = today;
+  const initialDate = weekDates.includes(today) ? today : weekDates[0];
   renderMealDays();
   renderMeal(initialDate);
   renderTimetable();
