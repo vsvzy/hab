@@ -33,7 +33,7 @@ jobs:
       - name: Prepare Pages site
         run: |
           mkdir -p _site/data
-          cp index.html styles.css app.js _site/
+          cp index.html timetable.html academic.html styles.css app.js _site/
           cp data/neis.json _site/data/
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
