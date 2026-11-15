@@ -11,5 +11,7 @@
   "timetable": [],
   "academicSchedule": [],
   "academicScheduleStart": null,
-  "academicScheduleEnd": null
+  "academicScheduleEnd": null,
+  "mealScheduleStart": null,
+  "mealScheduleEnd": null
 }
