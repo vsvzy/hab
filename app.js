@@ -1,4 +1,3 @@
-const DAYS_KO = ["월", "화", "수", "목", "금"];
 const SELECTED_CLASS_KEY = "hab:selectedClass";
 const TIMETABLE_DISPLAY_RULES = [
   { grade: "2", dayIndex: 1, firstPeriod: 5, lastPeriod: 6, label: "코스" },
@@ -12,13 +11,13 @@ const TIMETABLE_DISPLAY_RULES = [
 
 const elements = {
   status: document.querySelector("#status-message"),
-  dashboardCards: document.querySelector("#dashboard-cards"),
-  dashboardPrev: document.querySelector("#dashboard-prev"),
-  dashboardNext: document.querySelector("#dashboard-next"),
   todayDate: document.querySelector("#today-date"),
   todayWeekday: document.querySelector("#today-weekday"),
+  todayMealDate: document.querySelector("#today-meal-date"),
+  todayMealContent: document.querySelector("#today-meal-content"),
   mealContent: document.querySelector("#meal-content"),
   mealDate: document.querySelector("#meal-date"),
+  mealMonth: document.querySelector("#meal-month"),
   mealDays: document.querySelector("#meal-days"),
   mealPrev: document.querySelector("#meal-prev"),
   mealNext: document.querySelector("#meal-next"),
@@ -38,6 +37,7 @@ const elements = {
 let pageData = null;
 let weekDates = [];
 let selectedMealDate = "";
+let selectedMealMonth = "";
 let selectedAcademicMonth = "";
 
 function kstToday() {
@@ -73,6 +73,7 @@ function currentWeekStart(dateString) {
 }
 
 function setTableMessage(message) {
+  if (!elements.timetableBody) return;
   elements.timetableBody.replaceChildren();
   const row = document.createElement("tr");
   const cell = document.createElement("td");
@@ -83,28 +84,13 @@ function setTableMessage(message) {
   elements.timetableBody.append(row);
 }
 
-function setMealMessage(message) {
-  elements.mealContent.replaceChildren();
+function setMealMessage(container, message) {
+  if (!container) return;
+  container.replaceChildren();
   const paragraph = document.createElement("p");
   paragraph.className = "empty-state";
   paragraph.textContent = message;
-  elements.mealContent.append(paragraph);
-}
-
-function updateDashboardNavigation() {
-  const maxScroll = elements.dashboardCards.scrollWidth - elements.dashboardCards.clientWidth;
-  elements.dashboardPrev.disabled = elements.dashboardCards.scrollLeft <= 1;
-  elements.dashboardNext.disabled = maxScroll <= 1 || elements.dashboardCards.scrollLeft >= maxScroll - 1;
-}
-
-function moveDashboard(direction) {
-  const firstCard = elements.dashboardCards.querySelector(".panel");
-  if (!firstCard) return;
-  const gap = Number.parseFloat(getComputedStyle(elements.dashboardCards).columnGap) || 0;
-  elements.dashboardCards.scrollBy({
-    left: direction * (firstCard.getBoundingClientRect().width + gap),
-    behavior: "smooth",
-  });
+  container.append(paragraph);
 }
 
 function cleanMenu(menu) {
@@ -121,67 +107,129 @@ function renderMeal(dateString) {
   selectedMealDate = dateString;
   elements.mealDate.textContent = formatDate(dateString);
   const meals = (pageData?.meals || []).filter((meal) => meal.date === dateString);
-  elements.mealContent.replaceChildren();
+  renderMealEntries(elements.mealContent, meals, "이 날짜에는 등록된 급식 정보가 없습니다.");
 
+  for (const button of elements.mealDays.querySelectorAll("button[data-date]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.date === dateString));
+  }
+}
+
+function renderTodayMeal(dateString) {
+  if (!elements.todayMealContent) return;
+  elements.todayMealDate.textContent = formatDate(dateString);
+  const mealOrder = new Map([["조식", 0], ["중식", 1], ["석식", 2]]);
+  const meals = (pageData?.meals || [])
+    .filter((meal) => meal.date === dateString)
+    .sort((first, second) =>
+      (mealOrder.get(first.mealType) ?? 3) - (mealOrder.get(second.mealType) ?? 3)
+    );
+  renderMealEntries(elements.todayMealContent, meals, "오늘 등록된 급식 정보가 없습니다.");
+}
+
+function renderMealEntries(container, meals, emptyMessage) {
+  if (!container) return;
+  container.replaceChildren();
   if (meals.length === 0) {
-    setMealMessage("이 날짜에는 등록된 급식 정보가 없습니다.");
-  } else {
-    for (const meal of meals) {
-      const block = document.createElement("article");
-      block.className = "meal-block";
-      const type = document.createElement("span");
-      type.className = "meal-type";
-      type.textContent = meal.mealType || "급식";
-      block.append(type);
-
-      const list = document.createElement("ul");
-      list.className = "menu-list";
-      for (const item of cleanMenu(meal.menu)) {
-        const entry = document.createElement("li");
-        entry.textContent = item;
-        list.append(entry);
-      }
-      block.append(list);
-
-      if (meal.calorie) {
-        const calorie = document.createElement("p");
-        calorie.className = "calorie";
-        calorie.textContent = meal.calorie;
-        block.append(calorie);
-      }
-      elements.mealContent.append(block);
-    }
+    setMealMessage(container, emptyMessage);
+    return;
   }
 
-  const index = weekDates.indexOf(dateString);
-  const beforeWeek = dateString < weekDates[0];
-  const afterWeek = dateString > weekDates[weekDates.length - 1];
-  elements.mealPrev.disabled = index === 0 || (index < 0 && !afterWeek);
-  elements.mealNext.disabled = index === weekDates.length - 1 || (index < 0 && !beforeWeek);
-  for (const button of elements.mealDays.querySelectorAll("button")) {
-    button.setAttribute("aria-pressed", String(button.dataset.date === dateString));
+  for (const meal of meals) {
+    const block = document.createElement("article");
+    block.className = "meal-block";
+    const type = document.createElement("span");
+    type.className = "meal-type";
+    type.textContent = meal.mealType || "급식";
+    block.append(type);
+
+    const list = document.createElement("ul");
+    list.className = "menu-list";
+    for (const item of cleanMenu(meal.menu)) {
+      const entry = document.createElement("li");
+      entry.textContent = item;
+      list.append(entry);
+    }
+    block.append(list);
+
+    if (meal.calorie) {
+      const calorie = document.createElement("p");
+      calorie.className = "calorie";
+      calorie.textContent = meal.calorie;
+      block.append(calorie);
+    }
+    container.append(block);
   }
 }
 
 function renderMealDays() {
   elements.mealDays.replaceChildren();
-  weekDates.forEach((date, index) => {
+  if (!selectedMealMonth) return;
+  const [year, month] = selectedMealMonth.split("-").map(Number);
+  const dayCount = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  for (let index = 0; index < firstWeekday; index += 1) {
+    const empty = document.createElement("span");
+    empty.className = "day-empty";
+    empty.setAttribute("aria-hidden", "true");
+    elements.mealDays.append(empty);
+  }
+
+  const mealsByDate = new Set((pageData?.meals || []).map((meal) => meal.date));
+  for (let day = 1; day <= dayCount; day += 1) {
+    const date = `${selectedMealMonth}-${String(day).padStart(2, "0")}`;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "day-button";
     button.dataset.date = date;
     button.setAttribute("aria-pressed", String(date === selectedMealDate));
-    const weekday = document.createElement("span");
-    weekday.textContent = DAYS_KO[index];
-    const day = document.createElement("strong");
-    day.textContent = String(Number(date.slice(-2)));
-    button.append(weekday, day);
+    button.setAttribute("aria-label", `${formatDate(date)} 급식 보기${mealsByDate.has(date) ? ", 급식 있음" : ", 급식 정보 없음"}`);
+    if (mealsByDate.has(date)) button.classList.add("has-meal");
+    if (date === kstToday()) button.classList.add("is-today");
+    button.textContent = String(day);
     button.addEventListener("click", () => renderMeal(date));
     elements.mealDays.append(button);
-  });
+  }
+}
+
+function renderMealMonth(dateString) {
+  selectedMealMonth = dateString.slice(0, 7);
+  const rangeStart = pageData.mealScheduleStart;
+  const rangeEnd = pageData.mealScheduleEnd;
+  if (!rangeStart || !rangeEnd) {
+    elements.mealMonth.textContent = formatDate(`${selectedMealMonth}-01`, { year: "numeric", month: "long" });
+    elements.mealPrev.disabled = true;
+    elements.mealNext.disabled = true;
+    elements.mealDays.replaceChildren();
+    setMealMessage(elements.mealContent, "월별 급식표 자료를 확인할 수 없습니다.");
+    return;
+  }
+
+  elements.mealMonth.textContent = formatDate(`${selectedMealMonth}-01`, { year: "numeric", month: "long" });
+  elements.mealPrev.disabled = selectedMealMonth <= rangeStart.slice(0, 7);
+  elements.mealNext.disabled = selectedMealMonth >= rangeEnd.slice(0, 7);
+  renderMealDays();
+  renderMeal(dateString);
+}
+
+function moveMealMonth(offset) {
+  if (!selectedMealMonth || !pageData?.mealScheduleStart || !pageData?.mealScheduleEnd) return;
+  const [year, month] = selectedMealMonth.split("-").map(Number);
+  const nextMonth = new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 7);
+  const firstMonth = pageData.mealScheduleStart.slice(0, 7);
+  const lastMonth = pageData.mealScheduleEnd.slice(0, 7);
+  if (nextMonth < firstMonth || nextMonth > lastMonth) return;
+  const today = kstToday();
+  const meals = (pageData.meals || [])
+    .filter((meal) => meal.date.startsWith(`${nextMonth}-`))
+    .sort((first, second) => first.date.localeCompare(second.date));
+  const date = today.startsWith(`${nextMonth}-`)
+    ? today
+    : meals[0]?.date || `${nextMonth}-01`;
+  renderMealMonth(date);
 }
 
 function renderTimetable() {
+  if (!elements.grade || !elements.classNumber || !elements.timetableBody) return;
   const grade = elements.grade.value;
   const classNumber = elements.classNumber.value;
   const matchingRows = (pageData?.timetable || []).filter((row) =>
@@ -247,10 +295,11 @@ function renderTimetable() {
 }
 
 function renderTodayTimetable(lessons) {
+  if (!elements.todayTimetable) return;
   elements.todayTimetable.replaceChildren();
   const todayIndex = weekDates.indexOf(kstToday());
   if (todayIndex < 0) {
-    setScheduleMessage(elements.todayTimetable, "오늘은 평일 시간표가 없는 날입니다.");
+    setTodayTimetableMessage("오늘은 평일 시간표가 없는 날입니다.");
     return;
   }
 
@@ -258,7 +307,7 @@ function renderTodayTimetable(lessons) {
     .filter(([, days]) => days[todayIndex]?.subject)
     .sort(([first], [second]) => first - second);
   if (todayLessons.length === 0) {
-    setScheduleMessage(elements.todayTimetable, "선택한 반의 오늘 시간표가 NEIS에 등록되어 있지 않습니다.");
+    setTodayTimetableMessage("선택한 반의 오늘 시간표가 NEIS에 등록되어 있지 않습니다.");
     return;
   }
 
@@ -276,6 +325,12 @@ function renderTodayTimetable(lessons) {
   }
 }
 
+function setTodayTimetableMessage(message) {
+  if (!elements.todayTimetable) return;
+  elements.todayTimetable.replaceChildren();
+  setScheduleMessage(elements.todayTimetable, message);
+}
+
 function setScheduleMessage(container, message) {
   const messageElement = document.createElement(container.tagName === "OL" ? "li" : "p");
   messageElement.className = "empty-state";
@@ -284,6 +339,7 @@ function setScheduleMessage(container, message) {
 }
 
 function renderAcademicSchedule(today) {
+  if (!elements.academicMonth || !elements.academicEvents) return;
   if (!selectedAcademicMonth) selectedAcademicMonth = today.slice(0, 7);
   const monthDate = `${selectedAcademicMonth}-01`;
   elements.academicMonth.textContent = formatDate(monthDate, { year: "numeric", month: "long" });
@@ -345,6 +401,7 @@ function moveAcademicMonth(offset) {
 }
 
 function restoreClassSelection() {
+  if (!elements.grade || !elements.classNumber || !elements.classStorageNote) return;
   try {
     const saved = JSON.parse(localStorage.getItem(SELECTED_CLASS_KEY) || "null");
     if (saved && ["1", "2", "3"].includes(String(saved.grade))) {
@@ -360,6 +417,7 @@ function restoreClassSelection() {
 }
 
 function saveClassSelection() {
+  if (!elements.grade || !elements.classNumber || !elements.classStorageNote) return;
   try {
     localStorage.setItem(SELECTED_CLASS_KEY, JSON.stringify({
       grade: elements.grade.value,
@@ -375,8 +433,9 @@ function saveClassSelection() {
 
 async function loadData() {
   const today = kstToday();
-  elements.todayDate.textContent = formatDate(today, { month: "long", day: "numeric" });
-  elements.todayWeekday.textContent = formatDate(today, { weekday: "long" });
+  if (elements.todayDate) elements.todayDate.textContent = formatDate(today, { month: "long", day: "numeric" });
+  if (elements.todayWeekday) elements.todayWeekday.textContent = formatDate(today, { weekday: "long" });
+  if (elements.todayMealDate) elements.todayMealDate.textContent = formatDate(today);
 
   try {
     const response = await fetch("./data/neis.json", { cache: "no-store" });
@@ -385,74 +444,71 @@ async function loadData() {
   } catch {
     elements.status.hidden = false;
     elements.status.textContent = "학교 데이터를 불러오지 못했습니다. Pages 배포와 NEIS 데이터 업데이트 상태를 확인해 주세요.";
-    setMealMessage("급식 데이터를 불러올 수 없습니다.");
+    setMealMessage(elements.todayMealContent, "급식 데이터를 불러올 수 없습니다.");
+    setMealMessage(elements.mealContent, "급식 데이터를 불러올 수 없습니다.");
     setTableMessage("시간표 데이터를 불러올 수 없습니다.");
-    return;
-  }
-
-  if (!pageData.generatedAt || !pageData.weekStart) {
-    elements.status.hidden = false;
-    elements.status.textContent = "NEIS 데이터가 아직 준비되지 않았습니다. GitHub Actions에서 Pages 데이터 업데이트가 성공했는지 확인해 주세요.";
-    setMealMessage("아직 게시된 급식 정보가 없습니다.");
-    setTableMessage("아직 게시된 시간표 정보가 없습니다.");
+    setTodayTimetableMessage("시간표 데이터를 불러올 수 없습니다.");
     return;
   }
 
   if (!Array.isArray(pageData.meals) || !Array.isArray(pageData.timetable)) {
     elements.status.hidden = false;
     elements.status.textContent = "게시된 학교 데이터의 형식이 올바르지 않습니다. 데이터 업데이트를 확인해 주세요.";
-    setMealMessage("급식 자료를 확인할 수 없습니다.");
-    setTableMessage("시간표 자료를 확인할 수 없습니다.");
+    setMealMessage(elements.todayMealContent, "급식 자료를 확인할 수 없습니다.");
+    setMealMessage(elements.mealContent, "급식 자료를 확인할 수 없습니다.");
+    setTableMessage("아직 게시된 시간표 정보가 없습니다.");
     return;
   }
 
   if (pageData.school?.name !== "합덕제철고등학교") {
     elements.status.hidden = false;
     elements.status.textContent = "다른 학교의 자료가 감지되어 표시하지 않았습니다. NEIS 학교 설정을 확인해 주세요.";
-    setMealMessage("학교 자료를 확인할 수 없습니다.");
-    setTableMessage("학교 자료를 확인할 수 없습니다.");
+    setMealMessage(elements.todayMealContent, "학교 자료를 확인할 수 없습니다.");
+    setMealMessage(elements.mealContent, "학교 자료를 확인할 수 없습니다.");
+    setTableMessage("시간표 자료를 확인할 수 없습니다.");
     return;
   }
 
-  renderAcademicSchedule(today);
-  if (pageData.weekStart !== currentWeekStart(today)) {
+  if (!pageData.generatedAt) {
     elements.status.hidden = false;
-    elements.status.textContent = `게시된 자료는 ${formatDate(pageData.weekStart, { month: "long", day: "numeric" })} 주 기준입니다. 이번 주 자료가 업데이트될 때까지 급식과 시간표를 표시하지 않습니다.`;
-    setMealMessage("이번 주 급식 자료가 아직 업데이트되지 않았습니다.");
+    elements.status.textContent = "NEIS 데이터가 아직 준비되지 않았습니다. GitHub Actions에서 Pages 데이터 업데이트가 성공했는지 확인해 주세요.";
+    setMealMessage(elements.todayMealContent, "아직 게시된 오늘의 급식 정보가 없습니다.");
+    setMealMessage(elements.mealContent, "아직 게시된 월별 급식 정보가 없습니다.");
+    setTableMessage("아직 게시된 시간표 정보가 없습니다.");
+    setTodayTimetableMessage("아직 게시된 시간표 정보가 없습니다.");
+    if (elements.mealMonth) renderMealMonth(today);
+    if (elements.academicMonth) renderAcademicSchedule(today);
+    return;
+  }
+
+  elements.status.hidden = true;
+  renderTodayMeal(today);
+  if (elements.mealMonth) renderMealMonth(today);
+  if (elements.academicMonth) renderAcademicSchedule(today);
+
+  if (!elements.timetableBody) return;
+  if (!pageData.weekStart || pageData.weekStart !== currentWeekStart(today)) {
+    elements.status.hidden = false;
+    const weekNotice = pageData.weekStart
+      ? `게시된 자료는 ${formatDate(pageData.weekStart, { month: "long", day: "numeric" })} 주 기준입니다. 이번 주 시간표 자료가 업데이트될 때까지 시간표를 표시하지 않습니다.`
+      : "이번 주 시간표 자료가 아직 게시되지 않았습니다.";
+    elements.status.textContent = weekNotice;
     setTableMessage("이번 주 시간표 자료가 아직 업데이트되지 않았습니다.");
+    setTodayTimetableMessage("이번 주 시간표 자료가 아직 업데이트되지 않았습니다.");
     return;
   }
 
   elements.status.hidden = true;
   weekDates = Array.from({ length: 5 }, (_, index) => addDays(pageData.weekStart, index));
   elements.weekLabel.textContent = `${formatDate(weekDates[0], { month: "numeric", day: "numeric" })} – ${formatDate(weekDates[4], { month: "numeric", day: "numeric" })}`;
-
-  const initialDate = weekDates.includes(today) ? today : weekDates[0];
-  renderMealDays();
-  renderMeal(initialDate);
   renderTimetable();
 }
 
 restoreClassSelection();
-elements.mealPrev.addEventListener("click", () => {
-  const index = weekDates.indexOf(selectedMealDate);
-  if (index > 0) renderMeal(weekDates[index - 1]);
-  else if (index < 0 && selectedMealDate > weekDates[weekDates.length - 1]) {
-    renderMeal(weekDates[weekDates.length - 1]);
-  }
-});
-elements.mealNext.addEventListener("click", () => {
-  const index = weekDates.indexOf(selectedMealDate);
-  if (index >= 0 && index < weekDates.length - 1) renderMeal(weekDates[index + 1]);
-  else if (index < 0 && selectedMealDate < weekDates[0]) renderMeal(weekDates[0]);
-});
-elements.grade.addEventListener("change", saveClassSelection);
-elements.classNumber.addEventListener("change", saveClassSelection);
-elements.academicPrev.addEventListener("click", () => moveAcademicMonth(-1));
-elements.academicNext.addEventListener("click", () => moveAcademicMonth(1));
-elements.dashboardPrev.addEventListener("click", () => moveDashboard(-1));
-elements.dashboardNext.addEventListener("click", () => moveDashboard(1));
-elements.dashboardCards.addEventListener("scroll", updateDashboardNavigation, { passive: true });
-window.addEventListener("resize", updateDashboardNavigation);
-updateDashboardNavigation();
+elements.mealPrev?.addEventListener("click", () => moveMealMonth(-1));
+elements.mealNext?.addEventListener("click", () => moveMealMonth(1));
+elements.grade?.addEventListener("change", saveClassSelection);
+elements.classNumber?.addEventListener("change", saveClassSelection);
+elements.academicPrev?.addEventListener("click", () => moveAcademicMonth(-1));
+elements.academicNext?.addEventListener("click", () => moveAcademicMonth(1));
 loadData();

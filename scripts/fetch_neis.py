@@ -116,24 +116,12 @@ def build_payload(api_key):
     meals = []
     timetable = []
     academic_schedule = []
+    school_params = {
+        "ATPT_OFCDC_SC_CODE": office_code,
+        "SD_SCHUL_CODE": school_code,
+    }
     for date in dates:
         date_code = date.strftime("%Y%m%d")
-        school_params = {
-            "ATPT_OFCDC_SC_CODE": office_code,
-            "SD_SCHUL_CODE": school_code,
-        }
-
-        for row in fetch_rows(api_key, "mealServiceDietInfo", {
-            **school_params,
-            "MLSV_YMD": date_code,
-        }):
-            meals.append({
-                "date": date.isoformat(),
-                "mealType": row.get("MMEAL_SC_NM", ""),
-                "menu": row.get("DDISH_NM", ""),
-                "calorie": row.get("CAL_INFO", ""),
-            })
-
         for row in fetch_rows(api_key, "hisTimetable", {
             **school_params,
             "AY": str(date.year if date.month >= 3 else date.year - 1),
@@ -149,6 +137,20 @@ def build_payload(api_key):
                 "room": row.get("CLRM_NM", ""),
             })
         time.sleep(0.1)
+
+    for row in fetch_rows(api_key, "mealServiceDietInfo", {
+        **school_params,
+        "MLSV_FROM_YMD": academic_schedule_start.strftime("%Y%m%d"),
+        "MLSV_TO_YMD": academic_schedule_end.strftime("%Y%m%d"),
+    }):
+        meal_date = row.get("MLSV_YMD", "")
+        if meal_date:
+            meals.append({
+                "date": datetime.strptime(meal_date, "%Y%m%d").date().isoformat(),
+                "mealType": row.get("MMEAL_SC_NM", ""),
+                "menu": row.get("DDISH_NM", ""),
+                "calorie": row.get("CAL_INFO", ""),
+            })
 
     for row in fetch_rows(api_key, "SchoolSchedule", {
         "ATPT_OFCDC_SC_CODE": office_code,
@@ -188,6 +190,8 @@ def build_payload(api_key):
         "academicSchedule": academic_schedule,
         "academicScheduleStart": academic_schedule_start.isoformat(),
         "academicScheduleEnd": academic_schedule_end.isoformat(),
+        "mealScheduleStart": academic_schedule_start.isoformat(),
+        "mealScheduleEnd": academic_schedule_end.isoformat(),
     }
 
 
@@ -200,8 +204,10 @@ def main():
     OUTPUT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"NEIS data generated for {payload['weekStart']} to {payload['weekEnd']}: "
-        f"{len(payload['meals'])} meal entries, {len(payload['timetable'])} timetable entries, "
-        f"and {len(payload['academicSchedule'])} academic schedule entries."
+        f"{len(payload['timetable'])} timetable entries; meal schedule "
+        f"{payload['mealScheduleStart']} to {payload['mealScheduleEnd']} has "
+        f"{len(payload['meals'])} entries; academic schedule has "
+        f"{len(payload['academicSchedule'])} entries."
     )
 
 
